@@ -1,0 +1,5 @@
+# Bundle patch for dsh-fx-marquee: one Host row owning the quote route and the
+# client bundle that renders the ticker strip in the composer dock.
+- insert:
+    - id: fx-marquee
+      name: 'dsh-fx-marquee'

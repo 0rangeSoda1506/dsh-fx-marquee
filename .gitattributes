@@ -1,0 +1,4 @@
+# Keep line endings stable across Windows / macOS / Linux checkouts: the repo
+# stores LF, and a Windows checkout still gets LF in the working tree because
+# every file here is source we author (no .bat/.cmd shipped).
+* text=auto eol=lf
