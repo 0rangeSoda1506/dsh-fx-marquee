@@ -15,11 +15,15 @@
  *  1. **Tag after the LAST commit.** v0.1.1 was tagged, then a wording commit
  *     followed, so the tag pointed at a changelog one revision older than what
  *     npm shipped. `check` warns when the working tree is dirty for this reason.
- *  2. **Never delete and re-create a tag that has a Release.** Deleting the tag
- *     deleted the Release with it. To move a tag, update the ref:
- *       git push --force <url> refs/tags/vX.Y.Z
- *  3. **GitHub's Releases API caches for 60s** and will report a Release as
- *     missing right after you create it. Verify with a cache-buster (`?t=`).
+ *  2. **Never delete and re-create a tag that has a Release.** GitHub does not
+ *     delete the Release — it turns it into a **draft**, which keeps showing on
+ *     your Releases page as a duplicate beside the one you re-create. To move a
+ *     tag, update the ref instead:  git push --force <url> refs/tags/vX.Y.Z
+ *  3. **Verify with the token, never anonymously.** Draft releases are invisible
+ *     to anonymous API calls, so an anonymous check will confidently report the
+ *     wrong state — that is exactly how a duplicate draft went unnoticed while
+ *     the API insisted there was only one release. The Releases list is also
+ *     cached for 60 seconds, so re-reads need a cache-buster (`?t=<ms>`).
  */
 import { readFileSync, existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
@@ -82,6 +86,26 @@ export function sectionFor(version, file = CHANGELOG) {
   const body = rest.slice(rest.indexOf('\n') + 1)
   const end = body.indexOf('\n---')
   return (end < 0 ? body : body.slice(0, end)).trim()
+}
+
+/**
+ * A short human title for a release.
+ *
+ * Not the version: GitHub already renders the tag as a badge right above the
+ * title, so a title of `v0.1.1` makes the version appear twice. Not the raw
+ * first line either — truncating that mid-sentence produced
+ * `v0.1.1 — 走势图新增X轴单位…（灰色不可选）：外汇没`. So: the changelog's first
+ * sentence, markdown stripped, capped at a sentence boundary.
+ */
+export function titleFor(version, file = CHANGELOG) {
+  const first = sectionFor(version, file).split('\n').find((l) => l.trim() !== '') || ''
+  const plain = first.replace(/\*\*/g, '').replace(/`/g, '').trim()
+  const stop = plain.indexOf('。')
+  const sentence = stop < 0 ? plain : plain.slice(0, stop + 1)
+  if (sentence.length <= 50) return sentence
+  const head = sentence.slice(0, 50)
+  const comma = Math.max(head.lastIndexOf('，'), head.lastIndexOf('；'))
+  return comma > 20 ? head.slice(0, comma) + '…' : head + '…'
 }
 
 // ---------------------------------------------------------------- check
@@ -175,14 +199,26 @@ function draft(version) {
 }
 
 // ---------------------------------------------------------------- release
-async function release(version, token, notLatest) {
+async function release(version, token, notLatest, update) {
   if (!token) { console.log('缺少令牌'); process.exit(1) }
   const body = sectionFor(version) + FOOTER
+  const name = titleFor(version)
   console.log(`正文取自 CHANGELOG 的 ${version} 段（${body.length} 字符）`)
+  console.log(`标题: ${name}`)
+
+  if (update) {
+    const existing = await get('api.github.com', `/repos/${REPO}/releases/tags/v${version}?t=${Date.now()}`, 'application/vnd.github+json')
+    if (existing.status !== 200) { console.log(`❌ 没有 v${version} 的 Release 可更新`); process.exitCode = 1; return }
+    const id = JSON.parse(existing.body).id
+    const patched = await send('PATCH', `/repos/${REPO}/releases/${id}`, { body, name }, token)
+    console.log(`HTTP ${patched.status} ${patched.status === 200 ? '✅ 已更新' : '❌ ' + String(patched.body).slice(0, 200)}`)
+    if (patched.status !== 200) process.exitCode = 1
+    return
+  }
+
   const res = await send('POST', `/repos/${REPO}/releases`, {
     tag_name: `v${version}`,
-    // 标题只用版本号：从正文首行截出来的标语会被截成半句话。
-    name: `v${version}`,
+    name,
     body,
     draft: false,
     prerelease: false,
@@ -193,6 +229,7 @@ async function release(version, token, notLatest) {
     const r = JSON.parse(res.body)
     console.log('  ✅', r.html_url)
     console.log('  注意：GitHub 的 Release 接口缓存 60 秒，刚建完可能查不到——核验时加 ?t= 时间戳。')
+    console.log('  另：有 Release 的标签只能 git push --force 更新引用，删标签会把 Release 一起带走。')
   } else {
     console.log('  ❌', String(res.body).split(token).join('<TOKEN>').slice(0, 300))
     process.exitCode = 1
@@ -202,10 +239,10 @@ async function release(version, token, notLatest) {
 const [command, version, token, ...flags] = process.argv.slice(2)
 if (command === 'check') await check(version)
 else if (command === 'draft') draft(version)
-else if (command === 'release') await release(version, token, flags.includes('--not-latest'))
+else if (command === 'release') await release(version, token, flags.includes('--not-latest'), flags.includes('--update'))
 else {
   console.log('用法:')
   console.log('  node tools/release.mjs check [version]')
   console.log('  node tools/release.mjs draft <version>')
-  console.log('  node tools/release.mjs release <version> <token> [--not-latest]')
+  console.log('  node tools/release.mjs release <version> <token> [--not-latest] [--update]')
 }

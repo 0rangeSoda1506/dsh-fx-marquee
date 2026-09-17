@@ -131,8 +131,8 @@ node tools/release.mjs release 0.1.2 <github-token>   # 用标签建 GitHub Rele
 三个已经踩过的坑写在 `tools/release.mjs` 文件头，值得先读一眼：
 
 1. **标签必须打在最后一个提交之后**——`v0.1.1` 当初打完标签又补了一个措辞提交，导致 checkout 出来的更新日志和 npm 包里的不是同一份
-2. **有 Release 的标签只能 `--force` 移动，不能删了重建**——删标签会把 Release 一起带走
-3. **GitHub 的 Release 接口缓存 60 秒**，刚建完查询可能报 404，核验时要加 `?t=` 时间戳
+2. **有 Release 的标签只能 `--force` 更新引用，绝不能删了重建**——删标签时 GitHub 不会删除 Release，而是把它**转成草稿**，于是 Releases 页面上会和重建的那个并排出现两个同名版本
+3. **核验要用令牌，不能匿名**——草稿 Release 对匿名接口不可见（匿名检查会理直气壮地报错误的状态），而且 Release 列表有 60 秒缓存，重读要加 `?t=` 时间戳
 
 ## 许可
 
