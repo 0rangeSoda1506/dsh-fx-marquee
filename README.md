@@ -116,6 +116,24 @@ node test-granularity.mjs  # 三档粒度 × 七档组数（真实上游）
 node test-trend-route.mjs  # 趋势路由与降级回报
 ```
 
+## 发布流程
+
+`tools/release.mjs` 把发版流程固化下来（需要普通终端——agent 沙箱禁止 Node 捕获子进程输出）：
+
+```bash
+node tools/release.mjs check 0.1.2      # 自检：工作区是否干净、版本号、npm 是否已占用、远端是否已有该标签
+node tools/release.mjs draft 0.1.2      # 从上个标签以来的提交生成更新日志草稿（分组是机器猜的，需人工改写）
+# —— 人工整理 CHANGELOG.md、升两个 package.json 的版本号、commit —— #
+# —— 打完**最后一个**提交再打标签，然后推送：git push --follow-tags —— #
+node tools/release.mjs release 0.1.2 <github-token>   # 用标签建 GitHub Release，正文自动取自 CHANGELOG
+```
+
+三个已经踩过的坑写在 `tools/release.mjs` 文件头，值得先读一眼：
+
+1. **标签必须打在最后一个提交之后**——`v0.1.1` 当初打完标签又补了一个措辞提交，导致 checkout 出来的更新日志和 npm 包里的不是同一份
+2. **有 Release 的标签只能 `--force` 移动，不能删了重建**——删标签会把 Release 一起带走
+3. **GitHub 的 Release 接口缓存 60 秒**，刚建完查询可能报 404，核验时要加 `?t=` 时间戳
+
 ## 许可
 
 MIT
