@@ -6,8 +6,8 @@
  *   node tools/release.mjs draft <version>        # 生成更新日志草稿
  *   node tools/release.mjs release <version> <token> [--not-latest] [--update]
  *
- * Needs an ordinary shell: a sandboxed one may deny piped stdio to children, in
- * which case `check` and `draft` cannot run git.
+ * `check` and `draft` shell out to git, so they need a shell that permits piped
+ * stdio to child processes; a restricted one fails with EPERM.
  *
  * Notes that matter when changing this file:
  *   - Tag only after the final commit, or the tag ships a different tree than npm.
@@ -84,11 +84,10 @@ export function sectionFor(version, file = CHANGELOG) {
 /**
  * A short human title for a release.
  *
- * Not the version: GitHub already renders the tag as a badge right above the
- * title, so a title of `v0.1.1` makes the version appear twice. Not the raw
- * first line either — truncating that mid-sentence produced
- * `v0.1.1 — 走势图新增X轴单位…（灰色不可选）：外汇没`. So: the changelog's first
- * sentence, markdown stripped, capped at a sentence boundary.
+ * Not the version: GitHub renders the tag as a badge right above the title, so
+ * the version would appear twice. Not a mid-sentence truncation of the first
+ * line either. So: the changelog's first sentence, markdown stripped, cut at a
+ * sentence boundary.
  */
 export function titleFor(version, file = CHANGELOG) {
   const first = sectionFor(version, file).split('\n').find((l) => l.trim() !== '') || ''
@@ -165,7 +164,7 @@ function draft(version) {
     try { lastTag = git('describe', '--tags', '--abbrev=0') } catch { /* no tags yet */ }
     log = lastTag === '' ? git('log', '--pretty=%s', 'HEAD') : git('log', '--pretty=%s', `${lastTag}..HEAD`)
   } catch {
-    // Almost always the agent sandbox: it denies piped stdio to children.
+    // Usually a restricted shell that forbids piped stdio to child processes.
     console.log('⚠️  无法执行 git —— 请在普通终端（非 agent 沙箱）里运行本命令。')
     console.log('    （沙箱禁止 Node 用管道捕获子进程输出，git 会在 EPERM 上失败。）')
     process.exitCode = 1
