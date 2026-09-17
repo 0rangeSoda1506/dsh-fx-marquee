@@ -2,28 +2,21 @@
 /**
  * Release helper for dsh-fx-marquee.
  *
- *   node tools/release.mjs check              # 发布前自检
- *   node tools/release.mjs draft 0.1.2        # 生成更新日志草稿
- *   node tools/release.mjs release 0.1.1 <token> [--not-latest]
+ *   node tools/release.mjs check [version]        # 发布前自检
+ *   node tools/release.mjs draft <version>        # 生成更新日志草稿
+ *   node tools/release.mjs release <version> <token> [--not-latest] [--update]
  *
- * Run this from an ordinary shell. The agent's sandboxed shell cannot spawn
- * git with piped stdio (EPERM on named pipes), so `check` and `draft` only work
- * in a normal terminal.
+ * Needs an ordinary shell: a sandboxed one may deny piped stdio to children, in
+ * which case `check` and `draft` cannot run git.
  *
- * Three lessons from v0.1.1 are baked in, because each cost real time:
- *
- *  1. **Tag after the LAST commit.** v0.1.1 was tagged, then a wording commit
- *     followed, so the tag pointed at a changelog one revision older than what
- *     npm shipped. `check` warns when the working tree is dirty for this reason.
- *  2. **Never delete and re-create a tag that has a Release.** GitHub does not
- *     delete the Release — it turns it into a **draft**, which keeps showing on
- *     your Releases page as a duplicate beside the one you re-create. To move a
- *     tag, update the ref instead:  git push --force <url> refs/tags/vX.Y.Z
- *  3. **Verify with the token, never anonymously.** Draft releases are invisible
- *     to anonymous API calls, so an anonymous check will confidently report the
- *     wrong state — that is exactly how a duplicate draft went unnoticed while
- *     the API insisted there was only one release. The Releases list is also
- *     cached for 60 seconds, so re-reads need a cache-buster (`?t=<ms>`).
+ * Notes that matter when changing this file:
+ *   - Tag only after the final commit, or the tag ships a different tree than npm.
+ *   - To move a tag that has a Release, force-update the ref; deleting the tag
+ *     turns its Release into a draft that lingers on the Releases page.
+ *   - Anonymous API calls cannot see draft releases; the list is cached 60s.
+ *     Always verify authenticated, with a cache-buster.
+ *   - `npm publish` exiting 0 is not proof: with 2FA required and a token that
+ *     cannot bypass it, npm stages the publish and the version goes live later.
  */
 import { readFileSync, existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
