@@ -4,6 +4,8 @@
 
 **English** — A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh) web plugin: a live FX/market ticker strip above the composer, with click-through trend charts, a frozen-rate currency calculator, and a settings page. All data sources are keyless. Runs on Windows, macOS and Linux.
 
+完整版本变更见 [`CHANGELOG.md`](./CHANGELOG.md)。
+
 > 非官方插件，与 DeepSeek 官方无关。数据仅供个人参考，不构成投资建议。
 > Unofficial plugin, not affiliated with DeepSeek. Market data is for personal reference only, not investment advice.
 

@@ -42,10 +42,11 @@
     }
   },
   "files": [
-    "lib/index.js",
+    "CHANGELOG.md",
+    "cordis.patch.yml",
     "lib/client.js",
-    "lib/quotes.js",
-    "cordis.patch.yml"
+    "lib/index.js",
+    "lib/quotes.js"
   ],
   "engines": {
     "node": ">=18"
