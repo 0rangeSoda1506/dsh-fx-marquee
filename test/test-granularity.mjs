@@ -28,7 +28,7 @@ const check = (ok, label) => { if (!ok) bad++; return ok ? '✅' : '❌' }
 console.log('=== 档位必须是 7 的倍数 ===')
 console.log(`  ${SERIES_POINT_OPTIONS.join(', ')}  ${check(SERIES_POINT_OPTIONS.every((n) => n % 7 === 0) && SERIES_POINT_OPTIONS[0] === 14 && SERIES_POINT_OPTIONS[SERIES_POINT_OPTIONS.length - 1] === 56, '')}`)
 
-console.log('\n=== 各品种声明支持的档位 ===')
+console.log('\n=== 各品种声明支持的档位（小时档已暂停 → 全线只有 自动/天/月）===')
 for (const [id, kind] of [['USD/CNY', 'fx'], ['USD/CNH', 'fx'], ['EUR/USD', 'fx'], ['SH000001', 'index'], ['BTCUSDT', 'crypto']]) {
   console.log(`  ${id.padEnd(9)} ${kind.padEnd(7)} → ${availableUnitsFor(id, kind).join(', ')}`)
 }
@@ -36,13 +36,13 @@ for (const [id, kind] of [['USD/CNY', 'fx'], ['USD/CNH', 'fx'], ['EUR/USD', 'fx'
 // [symbol, requested unit, points, expectation]
 //   expectation: { unit } exact served unit, or 'missing' when no source can serve it
 const cases = [
-  ['BTCUSDT', 'hour', 12, { unit: 'hour' }],
-  ['BTCUSDT', 'hour', 60, { unit: 'hour' }],
-  ['BTCUSDT', 'hour', 28, { unit: 'hour', points: 24, note: '28 非 12 的倍数 → 收敛到 24' }],
+  ['BTCUSDT', 'hour', 12, { unit: 'day', note: '小时档已暂停 → 日线' }],
+  ['BTCUSDT', 'hour', 60, { unit: 'day', note: '小时档已暂停 → 日线' }],
+  ['BTCUSDT', 'hour', 28, { unit: 'day', points: 24, note: '28 非 12 的倍数 → 收敛 24，再回退日线' }],
   ['BTCUSDT', 'day', 21, { unit: 'day' }],
   ['BTCUSDT', 'month', 56, { unit: 'month' }],
   ['BTCUSDT', 'auto', 28, { any: true }],
-  ['SH000001', 'hour', 48, { unit: 'hour' }],
+  ['SH000001', 'hour', 48, { unit: 'day', note: '小时档已暂停 → 日线' }],
   ['SH000001', 'day', 14, { unit: 'day' }],
   ['SH000001', 'month', 35, { unit: 'month' }],
   ['SH000001', 'auto', 28, { unit: 'auto' }],

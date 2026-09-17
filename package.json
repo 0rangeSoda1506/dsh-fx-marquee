@@ -1,6 +1,6 @@
 {
   "name": "dsh-fx-marquee",
-  "version": "0.2.0",
+  "version": "0.1.1",
   "description": "Live FX and market ticker above the composer, with trend charts, per-market session status and a frozen-rate currency calculator. 输入框上方的实时汇率跑马灯，含走势图、交易时段与汇率计算器。",
   "keywords": [
     "dsh-plugin",
