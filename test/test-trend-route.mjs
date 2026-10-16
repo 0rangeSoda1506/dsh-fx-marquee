@@ -39,20 +39,23 @@ const first = await call(TREND_PATH, `?symbol=${encodeURIComponent('BTCUSDT')}&u
 const opts = first.parsed.pointOptions
 console.log('  pointOptions:', JSON.stringify(opts), check(JSON.stringify(opts) === JSON.stringify(SERIES_POINT_OPTIONS), ''))
 
-// Hourly is withdrawn, so every symbol advertises the three daily units.
+// Crypto and indices advertise hourly; a currency pair does not.
 const indexUnits = (await call(TREND_PATH, `?symbol=${encodeURIComponent('SH000001')}&unit=day&points=14`)).parsed.availableUnits
 console.log('  指数的 availableUnits:', JSON.stringify(indexUnits),
-  check(JSON.stringify(indexUnits) === JSON.stringify(['auto', 'day', 'month']), ''))
+  check(JSON.stringify(indexUnits) === JSON.stringify(['auto', 'hour', 'day', 'month']), ''))
+const fxUnits = (await call(TREND_PATH, `?symbol=${encodeURIComponent('USD/CNY')}&unit=day&points=14`)).parsed.availableUnits
+console.log('  货币对的 availableUnits:', JSON.stringify(fxUnits),
+  check(JSON.stringify(fxUnits) === JSON.stringify(['auto', 'day', 'month']), ''))
 const hourOpts = (await call(TREND_PATH, `?symbol=${encodeURIComponent('SH000001')}&unit=hour&points=24`)).parsed.pointOptions
 console.log('  小时档的 pointOptions（开关恢复后生效）:', JSON.stringify(hourOpts),
   check(JSON.stringify(hourOpts) === JSON.stringify([12, 24, 36, 48, 60]), ''))
 
 const cases = [
-  ['BTCUSDT', 'hour', 12, { unit: 'day', count: 12, note: '小时档已暂停 → 日线' }],
-  ['BTCUSDT', 'hour', 14, { unit: 'day', count: 24, note: '14 非 12 的倍数 → 24，再回退日线' }],
+  ['BTCUSDT', 'hour', 12, { unit: 'hour', count: 12 }],
+  ['BTCUSDT', 'hour', 14, { unit: 'hour', count: 24, note: '14 非 12 的倍数 → 24' }],
   ['BTCUSDT', 'day', 21, { unit: 'day', count: 21 }],
   ['BTCUSDT', 'month', 56, { unit: 'month', count: 56 }],
-  ['SH000001', 'hour', 48, { unit: 'day', count: 48 }],
+  ['SH000001', 'hour', 48, { unit: 'hour', count: 48 }],
   ['SH000001', 'month', 14, { unit: 'month', count: 14 }],
   ['USD/CNY', 'day', 28, { unit: 'day', count: 28 }],
   // Asked for hourly, must say it served daily — this is the whole point.
