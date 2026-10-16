@@ -45,7 +45,7 @@ console.log('  指数的 availableUnits:', JSON.stringify(indexUnits),
   check(JSON.stringify(indexUnits) === JSON.stringify(['auto', 'hour', 'day', 'month']), ''))
 const fxUnits = (await call(TREND_PATH, `?symbol=${encodeURIComponent('USD/CNY')}&unit=day&points=14`)).parsed.availableUnits
 console.log('  货币对的 availableUnits:', JSON.stringify(fxUnits),
-  check(JSON.stringify(fxUnits) === JSON.stringify(['auto', 'day', 'month']), ''))
+  check(JSON.stringify(fxUnits) === JSON.stringify(['auto', 'hour', 'day', 'month']), ''))
 const hourOpts = (await call(TREND_PATH, `?symbol=${encodeURIComponent('SH000001')}&unit=hour&points=24`)).parsed.pointOptions
 console.log('  小时档的 pointOptions（开关恢复后生效）:', JSON.stringify(hourOpts),
   check(JSON.stringify(hourOpts) === JSON.stringify([12, 24, 36, 48, 60]), ''))
@@ -59,11 +59,11 @@ const cases = [
   ['SH000001', 'month', 14, { unit: 'month', count: 14 }],
   ['USD/CNY', 'day', 28, { unit: 'day', count: 28 }],
   // Asked for hourly, must say it served daily — this is the whole point.
-  ['USD/CNY', 'hour', 12, { unit: 'day', count: 12, lacks: 'hour' }],
-  // EUR/USD keeps `hour` in availableUnits: eastmoney does publish 119.EURUSD,
+  ['USD/CNY', 'hour', 12, { unit: 'hour', count: 12 }],
+
   // so the capability is real even while that endpoint is refusing us. The
   // served unit must still report the fallback.
-  ['EUR/USD', 'hour', 24, { unit: 'day', count: 24, lacks: 'hour' }],
+  ['EUR/USD', 'hour', 24, { unit: 'hour', count: 24 }],
 ]
 
 console.log('\n=== 单元 × 档位 ===')

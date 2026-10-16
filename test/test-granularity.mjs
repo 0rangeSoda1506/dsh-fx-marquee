@@ -46,12 +46,12 @@ const cases = [
   ['SH000001', 'day', 14, { unit: 'day' }],
   ['SH000001', 'month', 35, { unit: 'month' }],
   ['SH000001', 'auto', 28, { unit: 'auto' }],
-  ['USD/CNY', 'hour', 12, { unit: 'day', note: '无小时源 → 回退日线' }],
+  ['USD/CNY', 'hour', 12, { unit: 'hour', note: 'Yahoo 小时线' }],
   ['USD/CNY', 'day', 14, { unit: 'day' }],
   ['USD/CNY', 'month', 21, { unit: 'month' }],
-  ['EUR/USD', 'hour', 24, { unit: 'day', note: '东财K线被限流 → 回退 ECB 日线' }],
+  ['EUR/USD', 'hour', 24, { unit: 'hour', note: 'Yahoo 小时线（东财被限流时的次选）' }],
   ['EUR/USD', 'day', 28, { unit: 'day' }],
-  ['USD/CNH', 'hour', 24, { unit: 'day', note: 'ECB 不发布 CNH；日线来自东财（已恢复），小时档仍不对货币对开放' }],
+  ['USD/CNH', 'hour', 24, { unit: 'hour', note: 'Yahoo 小时线' }],
 ]
 
 console.log('\n=== 单元 × 档位 实测 ===')
